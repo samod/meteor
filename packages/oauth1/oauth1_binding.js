@@ -13,9 +13,10 @@ var urlModule = Npm.require("url");
 //   - authorize (String): url
 //   - accessToken (String): url
 //   - authenticate (String): url
-OAuth1Binding = function(config, urls) {
+OAuth1Binding = function(config, urls, extraheaders) {
   this._config = config;
   this._urls = urls;
+  this._extraheaders = extraheaders || {};
 };
 
 OAuth1Binding.prototype.prepareRequestToken = function(callbackUrl) {
@@ -154,13 +155,15 @@ OAuth1Binding.prototype._call = function(method, url, headers, params, callback)
   // Make a authorization string according to oauth1 spec
   var authString = self._getAuthHeaderString(headers);
 
+  var headers = _.extend({
+      Authorization: authString
+    }, self._extraheaders)
+
   // Make signed request
   try {
     var response = HTTP.call(method, url, {
       params: params,
-      headers: {
-        Authorization: authString
-      }
+      headers: headers
     }, callback && function (error, response) {
       if (! error) {
         response.nonce = headers.oauth_nonce;
